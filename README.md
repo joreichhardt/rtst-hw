@@ -22,15 +22,15 @@ flowchart TB
     PA[Palo Alto VM-Series\ninspection] --- VPN[Cloud Router + HA VPN]
   end
 
-  subgraph Valeo[Valeo on-premises industrial network]
+  subgraph Enterprise[Enterprise on-premises industrial network]
     direction LR
-    EDGE[Valeo WAN edge\nSD-WAN or MPLS] --- GW[Test gateway]
+    EDGE[Enterprise WAN edge\nSD-WAN or MPLS] --- GW[Test gateway]
     WH[Wormhole Agent] --> GW
     GW --> WIN[Windows rig\nGUI runner] --> HW[Physical hardware]
     RDP[RDP for people] -. manual only .-> WIN
   end
 
-  VPN == Valeo-approved private connection ==> EDGE
+  VPN == enterprise-approved private connection ==> EDGE
   CP -. restricted app path through Wormhole .-> WH
   WIN -. logs and screenshots .-> GW
   GW -. status and artifacts .-> API
@@ -41,13 +41,13 @@ Editable diagram: [docs/architecture.drawio](docs/architecture.drawio)
 
 ## Hybrid model
 
-The test platform runs in the **GCP landing zone**. Test hardware remains on-premises in the Valeo industrial network.
+The test platform runs in the **GCP landing zone**. Test hardware remains on-premises in the Enterprise industrial network.
 
-- The Valeo-approved **SD-WAN/MPLS** path provides corporate network transport to GCP.
-- Use **HA VPN (IPsec/BGP)** over the Valeo-approved WAN. The factory has no direct GCP Interconnect.
-- A **Palo Alto VM-Series** in the GCP landing zone is the inspection and policy point, operated to Valeo standards.
+- The enterprise-approved **SD-WAN/MPLS** path provides corporate network transport to GCP.
+- Use **HA VPN (IPsec/BGP)** over the enterprise WAN. The factory has no direct GCP Interconnect.
+- A **Palo Alto VM-Series** in the GCP landing zone is the inspection and policy point, operated to enterprise standards.
 - **Wormhole is a separate, application-level path**: Control Plane reaches only the test gateway, not the whole industrial network.
-- Do not introduce a direct WireGuard tunnel unless Valeo Network Security explicitly approves it; it must not bypass the landing zone or corporate WAN controls.
+- Do not introduce a direct WireGuard tunnel unless Enterprise Network Security explicitly approves it; it must not bypass the landing zone or corporate WAN controls.
 
 This is a hybrid service: cloud control and scheduling, on-premises GUI execution and hardware.
 

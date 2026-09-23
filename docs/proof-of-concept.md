@@ -12,7 +12,7 @@ Run both candidates on the same real rig:
 ## Setup
 
 - One Control Plane workload with a minimal Test API and scheduler in the GCP landing zone.
-- Valeo-approved GCP/on-premises path: SD-WAN/MPLS carrying HA VPN, with the agreed Palo Alto VM-Series policy point. No factory-to-GCP Interconnect.
+- Enterprise-approved GCP/on-premises path: SD-WAN/MPLS carrying HA VPN, with the agreed Palo Alto VM-Series policy point. No factory-to-GCP Interconnect.
 - One local gateway behind a Wormhole v2 agent.
 - One Windows rig with the target application and physical hardware.
 - One non-destructive test case with a documented safe state and recovery owner.
@@ -23,7 +23,7 @@ Run both candidates on the same real rig:
 
 | Step | Check | Pass condition |
 |---|---|---|
-| Hybrid network | Validate approved GCP ↔ Valeo routing and VM-Series policy. | Only agreed test prefixes/routes are present; no broad industrial route or public Windows/RDP access. |
+| Hybrid network | Validate approved GCP ↔ Enterprise routing and VM-Series policy. | Only agreed test prefixes/routes are present; no broad industrial route or public Windows/RDP access. |
 | Wormhole boundary | Cloud calls the gateway health endpoint. | No access to RDP, Windows hosts, or arbitrary LAN targets. |
 | Rig readiness | Runner reports version, rig ID, and desktop readiness. | Locked or missing desktop is `NOT_READY`. |
 | Track A: Go runner | Run a simple UI Automation flow. | Ten consecutive runs; failures include a reason and screenshot. |

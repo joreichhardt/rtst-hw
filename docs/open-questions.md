@@ -12,10 +12,10 @@ Resolve these before production work.
 | Can the test run in a managed interactive desktop (Go)? | Windows Workplace + Security |
 | Can the real test run in PAD's unattended RDP session rather than the console? | Test Engineering + rig owner |
 | What happens on RDP disconnect, lock, desktop switch, and human login? | Windows Workplace + Test Engineering |
-| Which GCP region, projects, VPCs, and shared-VPC/landing-zone controls apply? | Valeo Cloud Platform |
-| Is a Palo Alto VM-Series already the approved GCP inspection appliance, and who owns its HA/policy/logging? | Valeo Network Security |
-| Which Valeo-approved SD-WAN/MPLS path and HA VPN peer devices terminate the factory-to-GCP connection? | Valeo Network + Cloud Platform |
-| Which on-premises prefixes may be routed to GCP, and which must never be advertised? | Valeo Network Security |
+| Which GCP region, projects, VPCs, and shared-VPC/landing-zone controls apply? | Enterprise Cloud Platform |
+| Is a Palo Alto VM-Series already the approved GCP inspection appliance, and who owns its HA/policy/logging? | Enterprise Network Security |
+| Which enterprise-approved SD-WAN/MPLS path and HA VPN peer devices terminate the factory-to-GCP connection? | Enterprise Network + Cloud Platform |
+| Which on-premises prefixes may be routed to GCP, and which must never be advertised? | Enterprise Network Security |
 | Which exact LAN hosts and ports may the cloud reach? | Network Security |
 | Which Wormhole version, topology, and egress rules apply to our tenant? | Platform team |
 | What recovery action is safe after `UNKNOWN`? | Test Engineering + hardware owner |
@@ -31,7 +31,7 @@ Resolve these before production work.
 - PAD governance: Process licences, Dataverse environment, OAuth permissions, machine connections, callback allow-list, and flow versioning.
 - Rig labels, shared devices, maintenance windows, quotas, and priorities.
 - Agent/runner updates, signing, SBOM, rollback, monitoring, and support ownership.
-- IPsec/BGP, Cloud Router, VM-Series, and route-filter ownership; alerting and incident handoff across Valeo Network, Security, and Platform teams.
+- IPsec/BGP, Cloud Router, VM-Series, and route-filter ownership; alerting and incident handoff across Enterprise Network, Security, and Platform teams.
 - Whether any WireGuard use is approved, and how it is terminated, monitored, and governed without bypassing the landing zone.
 
 Record every answer with owner, date, evidence, and accepted risk.
