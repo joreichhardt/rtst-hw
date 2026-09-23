@@ -4,6 +4,18 @@
 
 The cloud hosts the test API, scheduler, job store, and artifact storage. Windows rigs keep the GUI application and physical hardware. A local gateway is the only LAN endpoint exposed to the cloud through Control Plane Wormhole.
 
+## Hybrid connection: cloud to on-premises hardware
+
+The hardware stays on-premises. It is never exposed directly to the internet or registered as a cloud workload.
+
+1. Install the Wormhole Agent on a dedicated local gateway VM, not on the Windows rigs.
+2. Allow the gateway VM to reach Control Plane as required by the deployed tenant. The Wormhole Agent keeps the persistent connection.
+3. Allow the cloud workload through Wormhole to reach **only** the local test gateway's approved TCP/UDP port.
+4. The test gateway communicates with local Windows runners. Each runner controls its directly attached hardware.
+5. Results return along the same logical path: Windows runner → test gateway → Wormhole → cloud API → CI.
+
+The cloud controls scheduling and receives results; the on-premises rig executes the GUI and hardware work. If Wormhole disconnects, stop dispatching new jobs. Treat a started job with no confirmed result as `UNKNOWN`.
+
 ## Verified Control Plane facts
 
 Control Plane documents that its Wormhole agent:

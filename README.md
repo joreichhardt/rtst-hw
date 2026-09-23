@@ -11,39 +11,44 @@ RDP remains available for setup, diagnosis, and recovery. It is not the CI execu
 ## Architecture
 
 ```mermaid
-flowchart LR
-  CI[CI pipeline] -->|OIDC / API token| API[Test API]
-  API --> SCH[Scheduler and reservations]
-  API --> DB[(Job database)]
-  API --> ART[(Artifact storage)]
+flowchart TB
+  CI[CI pipeline] -->|request test| API[Test API]
 
   subgraph Cloud[Control Plane Cloud]
-    API
-    SCH
-    DB
-    ART
-    CW[Cloud workload]
+    direction LR
+    API --> SCH[Scheduler]
+    API --> DB[(Jobs)]
+    API --> ART[(Artifacts)]
+    API --> CW[Cloud dispatch]
   end
 
   subgraph LAN[Local test network]
-    WH[Control Plane Wormhole Agent\nnetwork tunnel only]
-    GW[Test gateway]
-    WIN[Windows test rig\nGUI runner + interactive desktop]
-    HW[Physical hardware]
-    RDP[RDP for people\nsetup and recovery]
+    direction LR
+    WH[Wormhole Agent] --> GW[Test gateway]
+    GW --> WIN[Windows rig\nGUI runner]
+    WIN --> HW[Physical hardware]
+    RDP[RDP for people] -. manual only .-> WIN
   end
 
   CW -. TCP/UDP through Wormhole .-> WH
-  WH --> GW
-  GW --> WIN
-  WIN --> HW
-  RDP --> WIN
-  WIN -->|logs and screenshots| GW
-  GW -.-> API
-  API -->|status and artifact URLs| CI
+  WIN -. logs and screenshots .-> GW
+  GW -. status and artifacts .-> API
+  API -->|result URLs| CI
 ```
 
 Editable diagram: [docs/architecture.drawio](docs/architecture.drawio)
+
+## How on-prem hardware joins the hybrid cloud
+
+The hardware is **not moved into the cloud**. It stays connected to its Windows rig in the local test network.
+
+1. Run the Control Plane Wormhole Agent on a local gateway VM that can reach the test gateway.
+2. The Wormhole Agent opens and maintains the secure connection to Control Plane.
+3. The cloud workload reaches only the gateway's approved TCP/UDP endpoint through that connection.
+4. The gateway relays the reserved job to the Windows GUI runner on the local rig.
+5. The runner drives the local GUI and hardware, then sends logs and screenshots back through the gateway.
+
+This makes the test service hybrid: **cloud control plane, on-premises test execution and hardware**.
 
 ## Keep these roles separate
 
