@@ -1,46 +1,37 @@
-# Fünf-Minuten-Gespräch: Hardwaretests aus CI
+# Five-Minute Team Talk
 
-## 0:00–0:40 – Problem
+## 0:00–0:40 — Problem
 
-„Heute sitzen Mitarbeitende per RDP auf Windows-Testständen und klicken GUI-Tests an echter Hardware. Das funktioniert für Einzeltests, ist aber nicht buchbar, schlecht parallelisierbar und liefert CI keine belastbaren Artefakte.“
+Today, people use RDP to run GUI tests on physical Windows rigs. That is manual, hard to schedule, and does not give CI a reliable result package.
 
-**Zielbild:** CI bucht einen passenden Teststand, führt exakt einen Test aus und erhält Status, Logs und Screenshots zurück.
+Goal: CI books a rig, runs one test, and gets status, logs, and screenshots.
 
-## 0:40–1:30 – Architektur in einem Bild
+## 0:40–1:30 — Design
 
-Zeige [das Diagramm im README](../README.md#zielarchitektur).
+Show the [architecture diagram](../README.md#architecture).
 
-„Cloud-seitig laufen Test-API und Scheduler. Lokal steht ein eng begrenztes Test-Gateway. Control Plane Wormhole verbindet den Cloud-Workload lediglich mit diesem Gateway. Für die GUI vergleichen wir zwei Runner: unseren Go-Testagenten mit Windows UI Automation in einer interaktiven Sitzung sowie Power Automate Desktop, das die API über Dataverse startet. RDP bleibt ein menschliches Diagnosewerkzeug.“
+The cloud owns the API, scheduler, jobs, and artifacts. A local gateway is the only LAN service reached through Control Plane Wormhole. The Windows rig runs the GUI test. RDP stays for people.
 
-**Merksatz:** *Wormhole transportiert Netzwerkverkehr; Go-Agent oder PAD testen die GUI.*
+**Key point:** Wormhole provides network transport. It does not run Windows GUI tests.
 
-## 1:30–2:25 – Zuverlässigkeit und Parallelität
+## 1:30–2:20 — Reliability
 
-„Der Scheduler reserviert einen Teststand atomar: pro Teststand läuft maximal ein Hardwaretest. Ein Lease plus Fencing-Token verhindert, dass eine verspätete erneute Zustellung einen alten Auftrag ausführt. Nachrichten dürfen erneut kommen, Hardwaretests nicht doppelt.“
+One rig runs one job. The scheduler uses leases and fencing tokens, so a late message cannot run an old job. Delivery may happen more than once; hardware execution must not.
 
-„Wenn ein Job nach dem Start wegen eines Ausfalls nicht aufklärbar ist, heißt er `UNKNOWN`, nicht ‚fehlgeschlagen und sofort wiederholen‘. Der Stand wird quarantänisiert, bis ein definierter Recovery-Schritt erfolgt.“
+If a job starts and its outcome is lost, it becomes `UNKNOWN`. Do not automatically rerun it; recover the rig first.
 
-## 2:25–3:20 – Sicherheit
+## 2:20–3:10 — Security
 
-„Die Cloud sieht nicht das gesamte Test-LAN. Über Wormhole ist nur der Gateway-Endpunkt erreichbar, nicht RDP und nicht jeder Windows-PC. CI, Gateway und Testagent authentisieren sich getrennt mit kurzlebigen bzw. rotierbaren Identitäten. Testdefinitionen sind allow-gelistet – kein Remote-Shell-Service.“
+The cloud can reach the gateway only, not RDP or the whole LAN. CI, gateway, and runner use separate identities. Test definitions are allow-listed; this is not a remote shell service.
 
-„Control Plane dokumentiert Wormhole als Tunnel zu privaten TCP/UDP-Endpunkten und v2-Agenten als aktiv/aktiv. Die Dokumentation behauptet jedoch keine Windows-GUI-Automation; genau deshalb ist das eine klar getrennte eigene Komponente.“
+Control Plane documents Wormhole for private TCP/UDP connectivity. It does not document Windows desktop automation.
 
-## 3:20–4:20 – Windows-Risiko ehrlich ansprechen
+## 3:10–4:20 — Two GUI runner options
 
-„Beim Go-Agenten benötigt UI-Automation die interaktive Sitzung. RDP-Trennung, Sperrbildschirm, Support-Anmeldung, UAC und Updates können sie verändern. Der Agent prüft den Desktop vor dem Start und bricht sicher ab."
+**Option A: Go + Windows UI Automation.** Direct control, but we own the runner, updates, and desktop-session behaviour.
 
-„PAD ist eine ernsthafte Alternative: Microsoft dokumentiert `RunDesktopFlow` per Dataverse mit Status-Polling oder Callback. Unattended PAD erzeugt jedoch eine eigene RDP-Sitzung, nicht die Konsole; auf Windows 10/11 darf dabei keine andere aktive Sitzung bestehen. Der PoC führt deshalb einen echten Hardwaretest in beiden Modi aus. Das vorgeschlagene `uandersonricardo/uiautomation` bleibt ein PoC-Kandidat, keine unvalidierte Produktionsentscheidung.“
+**Option B: Power Automate Desktop.** The Test API calls Dataverse `RunDesktopFlow`; it can poll status or receive a callback. Unattended PAD creates its own RDP session, not the console session. On Windows 10/11 it cannot run while another user session is active. Test this on the real hardware before choosing it.
 
-## 4:20–5:00 – Bitte ans Team
+## 4:20–5:00 — Ask
 
-„Lasst uns einen Teststand und einen nicht-destruktiven Testfall für den PoC freigeben. Nach acht klaren Abnahmephasen entscheiden wir anhand von Messdaten: UI-Stabilität, RDP-/Sperrverhalten, Netzwerkgrenzen und Recovery. Erst dann skalieren wir auf weitere Hardware.“
-
-## Erwartete Rückfragen – Kurzantworten
-
-| Frage | Antwort |
-|---|---|
-| „Kann Control Plane die Windows-GUI bedienen?“ | Nein, das ist nicht als Wormhole-Funktion belegt. Wormhole ist der Netzwerkpfad; der Go-Agent bedient die GUI. |
-| „Warum nicht einfach RDP aus CI?“ | RDP koppelt CI an einen fragilen menschlichen Desktopzugriff, erschwert Sicherheit/Parallelität und liefert keinen idempotenten Auftragsvertrag. |
-| „Was passiert bei Verbindungsverlust?“ | Vor Start erneut zustellbar; nach tatsächlichem Start konservativ `UNKNOWN` plus Quarantäne, bis Recovery entschieden ist. |
-| „Können mehrere Teams gleichzeitig testen?“ | Ja, auf verschiedenen reservierten Testständen; niemals gleichzeitig auf demselben Stand. |
+Provide one rig and one non-destructive test for the PoC. We will measure GUI stability, session behaviour, network limits, retries, and recovery. Choose the runner from those results, not assumptions.

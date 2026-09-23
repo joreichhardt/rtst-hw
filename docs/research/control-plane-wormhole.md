@@ -1,33 +1,25 @@
-# Quellenprüfung: Control Plane Wormhole
+# Control Plane Wormhole Source Check
 
-**Abgerufen:** 23.09.2026  
-**Zweck:** Nur produktspezifische Aussagen, die in dieser Architekturplanung verwendet werden.
+**Accessed:** 2026-09-23
 
-## Verifizierte Fakten
+## Verified facts
 
-| Aussage | Beleg |
-|---|---|
-| Der Control-Plane-Wormhole-Agent verbindet Workloads mit TCP-/UDP-Endpunkten in privaten Netzen, einschließlich On-Premises-Netzen. Der Agent wird im privaten Netz betrieben und baut eine sichere persistente Verbindung zu Control-Plane-Servern auf; Anfragen und Antworten werden darüber getunnelt. | [Agent reference, Overview](https://docs.controlplane.com/reference/agent) |
-| Agents sind organisationsbezogen und werden mit Identities verwendet. | [Agent reference, Overview](https://docs.controlplane.com/reference/agent) |
-| Version-2-Agents laufen aktiv/aktiv; bei fehlenden Heartbeats übernehmen verbleibende Agents Arbeit. Control Plane empfiehlt für HA eine feste Gruppe mit mindestens zwei Instanzen. | [Agent reference, Version 2](https://docs.controlplane.com/reference/agent) |
-| Die v2-Bidirektionalitätsfunktion bietet einen Proxy auf Port 3128 für Aufrufe aus dem privaten Netz zu Control-Plane-Workloads. | [Agent reference, Bi-directional Functionality](https://docs.controlplane.com/reference/agent) |
+| Claim | Source |
+| --- | --- |
+| A Wormhole agent connects workloads to selected TCP/UDP endpoints in private networks, including on-premises networks. It runs in the private network and maintains a persistent secure connection to Control Plane. | [Control Plane Agent reference](https://docs.controlplane.com/reference/agent) |
+| Agents are organisation-scoped and used with identities. | [Control Plane Agent reference](https://docs.controlplane.com/reference/agent) |
+| v2 agents can run active-active. Control Plane recommends a fixed group of at least two instances for high availability. | [Control Plane Agent reference](https://docs.controlplane.com/reference/agent) |
+| v2 provides an optional proxy on port 3128 for private-network calls to Control Plane workloads. | [Control Plane Agent reference](https://docs.controlplane.com/reference/agent) |
 
-## Nicht von der Quelle behauptet
+## Not claimed by the source
 
-Die geprüfte Wormhole-Referenz belegt **nicht**, dass Control Plane:
+The reference does not claim Windows UI Automation, RDP control, Windows sign-in/session management, GUI testing, physical hardware testing, job scheduling, reservations, or exactly-once execution.
 
-- Windows UI Automation, RDP, Windows-Logon oder eine interaktive Sitzung verwaltet,
-- GUI-Tests oder physische Hardwaretests ausführt,
-- einen Scheduler, Reservierungssemantik oder genau-einmalige Hardwareausführung bereitstellt,
-- konkrete Egress-Firewall-Ziele/Ports für den individuellen Tenant ersetzt.
+## Design consequence
 
-Diese Themen sind in den Planungsunterlagen entweder eigene Komponenten oder explizite PoC-/Team-Entscheidungen.
+Use Wormhole as a narrow network path to the local test gateway. Keep GUI execution in a separate Windows runner: Go/UI Automation or Power Automate Desktop.
 
-## Konsequenz für den Entwurf
+## Related sources
 
-Wormhole ist als eingeschränkter Netzwerkpfad zum **lokalen Test-Gateway** vorgesehen. Der Windows-Testagent (oder alternativ Power Automate Desktop) bleibt der GUI-Runner. Dadurch hängen die Richtigkeits- und Windows-Sitzungsanforderungen nicht an einer nicht belegten Produktaussage.
-
-## Weitere Einstiegsquellen
-
-- [Control Plane Introduction](https://docs.controlplane.com/introduction)
-- [Control Plane Documentation Index](https://docs.controlplane.com/llms.txt)
+- [Control Plane introduction](https://docs.controlplane.com/introduction)
+- [Control Plane documentation index](https://docs.controlplane.com/llms.txt)

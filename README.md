@@ -1,86 +1,71 @@
-# Remote Test Hardware – Architekturplanung
+# Remote Test Hardware
 
-> **Status:** Diskussions- und Proof-of-Concept-Planung, kein produktiver Code.  
-> **Zielgruppe:** Plattform- und Testingenieure
+Architecture plan for running physical Windows test rigs as a CI service. This repository contains planning only.
 
-## Ziel
+## Goal
 
-Physische Testhardware an lokalen Windows-Testständen soll als **buchbarer Testdienst** für CI-Pipelines verfügbar werden. Eine Pipeline fordert einen Test an, erhält dessen Status und ruft Logs sowie Screenshots ab. Die Testausführung bleibt dort, wo Hardware und GUI laufen: auf einem zugewiesenen Windows-PC in einer interaktiven Benutzersitzung.
+A CI pipeline requests a test, reserves a compatible test rig, and receives status, logs, and screenshots. GUI and hardware work stay on the assigned Windows machine.
 
-RDP wird **nicht** automatisiert und nicht ersetzt: Es bleibt der Zugang für manuelle Einrichtung, Diagnose und Recovery.
+RDP remains available for setup, diagnosis, and recovery. It is not the CI execution path.
 
-## Nutzen
-
-- Reproduzierbare Hardware-Tests aus CI statt manueller RDP-Schritte
-- Exklusive Reservierung vermeidet konkurrierende Zugriffe auf denselben Prüfstand
-- Einheitliche Ergebnisse: Status, strukturierte Logs und Screenshots je Auftrag
-- Kein eingehender Zugriff aus der Cloud in das lokale Netz nötig (Annahme; im PoC nachweisen)
-- Klare Trennung zwischen Cloud-Steuerung, lokaler Netzverbindung und GUI-Ausführung
-
-## Zielarchitektur
+## Architecture
 
 ```mermaid
 flowchart LR
-  CI[CI-Pipeline] -->|OIDC / API-Token| API[Test-API]
-  API --> S[Scheduler + Reservierungen]
-  API --> R[(Auftrags- und Ergebnisdatenbank)]
-  API --> A[(Artefaktspeicher)]
+  CI[CI pipeline] -->|OIDC / API token| API[Test API]
+  API --> SCH[Scheduler and reservations]
+  API --> DB[(Job database)]
+  API --> ART[(Artifact storage)]
 
-  subgraph CP[Control Plane Cloud]
+  subgraph Cloud[Control Plane Cloud]
     API
-    S
-    R
-    A
-    W[Cloud-Workload]
+    SCH
+    DB
+    ART
+    CW[Cloud workload]
   end
 
-  subgraph LAN[Lokales Testnetz]
-    WH[Control Plane Wormhole Agent\nNetzwerk-Tunnel]
-    GA[Test-Gateway\nAuftragsvermittlung]
-    WPC1[Windows-Teststand A\nEigener Windows-Testagent\ninteraktive Sitzung]
-    WPC2[Windows-Teststand B\nEigener Windows-Testagent\ninteraktive Sitzung]
-    HW1[Physische Hardware A]
-    HW2[Physische Hardware B]
-    RDP[RDP für Menschen\nEinrichtung / Diagnose]
+  subgraph LAN[Local test network]
+    WH[Control Plane Wormhole Agent\nnetwork tunnel only]
+    GW[Test gateway]
+    WIN[Windows test rig\nGUI runner + interactive desktop]
+    HW[Physical hardware]
+    RDP[RDP for people\nsetup and recovery]
   end
 
-  W -. TCP/UDP über Wormhole .-> WH
-  WH --> GA
-  GA -->|ausgehende Verbindung / Long Poll| WPC1
-  GA -->|ausgehende Verbindung / Long Poll| WPC2
-  WPC1 --> HW1
-  WPC2 --> HW2
-  RDP --> WPC1
-  RDP --> WPC2
-  WPC1 -->|Logs/Screenshots| GA
-  WPC2 -->|Logs/Screenshots| GA
-  GA -. über Wormhole .-> API
-  API -->|Status + Artefakt-URLs| CI
+  CW -. TCP/UDP through Wormhole .-> WH
+  WH --> GW
+  GW --> WIN
+  WIN --> HW
+  RDP --> WIN
+  WIN -->|logs and screenshots| GW
+  GW -.-> API
+  API -->|status and artifact URLs| CI
 ```
 
-## Die entscheidende Trennung
+Editable diagram: [docs/architecture.drawio](docs/architecture.drawio)
 
-| Baustein | Verantwortung | Nicht verantwortlich für |
-|---|---|---|
-| **Control Plane Wormhole Agent** | Sichere, persistente Netzwerkverbindung zwischen Cloud-Workload und ausdrücklich erreichbaren privaten TCP/UDP-Endpunkten | Testplanung, Windows-Login, GUI-Automation, Hardwaresteuerung |
-| **Unser Windows-Testagent (Option A)** | Holt den reservierten Job, führt GUI-/Hardware-Test in der interaktiven Sitzung aus, sammelt Artefakte | Cloud-Netztunnel oder Wormhole-Betrieb |
-| **Power Automate Desktop (Option B)** | Von der Test-API über Dataverse gestarteter Desktop-Flow; führt die GUI aus und meldet Flow-Status/-Ausgaben | Testplanung, Reservierung und Wormhole-Betrieb |
-| **Test-Gateway** | Minimale lokale Vermittlungs-API; begrenzt den Tunnel auf einen Dienst und entkoppelt Cloud von PCs | GUI-Ausführung |
+## Keep these roles separate
 
-Control Plane dokumentiert Wormhole als Verbindung von Cloud-Workloads zu TCP-/UDP-Endpunkten in privaten Netzen. Daraus folgt **nicht**, dass Wormhole Windows-GUI-Tests oder interaktive Sitzungen ausführt. Diese Aufgaben bleiben ausdrücklich bei einem GUI-Runner: entweder unserem Windows-Testagenten (Option A) oder Power Automate Desktop (Option B). Details und Quellen: [Technische Architektur](docs/architecture.md).
+| Component | Purpose |
+|---|---|
+| **Control Plane Wormhole Agent** | Private-network connectivity for selected TCP/UDP endpoints. It does not run tests or manage Windows desktops. |
+| **Test gateway** | The only local endpoint exposed through Wormhole. It relays jobs and results. |
+| **GUI runner** | Runs on the Windows rig: either a Go UI Automation agent or Power Automate Desktop. |
+| **RDP** | Human-only setup, diagnosis, and recovery. |
 
-## Dokumente
+## Operating rules
 
-- [Technische Architektur und Ablauf](docs/architecture.md) · [bearbeitbares draw.io-Diagramm](docs/architecture.drawio)
-- [Proof of Concept mit Abnahmekriterien](docs/proof-of-concept.md)
-- [Fünf-Minuten-Präsentation](docs/team-talk.md)
-- [Offene Fragen vor Umsetzung](docs/open-questions.md)
-- [Quellennachweis Control Plane Wormhole](docs/research/control-plane-wormhole.md)
+- One GUI/hardware job per test rig.
+- Each job uses an idempotency key, lease, and fencing token.
+- A job with an unknown outcome stays `UNKNOWN`; do not blindly rerun it.
+- The cloud may reach the gateway, not RDP or arbitrary LAN hosts.
+- Run GUI tests only when the selected runner confirms a usable Windows desktop.
 
-## Leitplanken
+## Documents
 
-1. Ein Teststand führt höchstens **einen** Hardware-/GUI-Auftrag gleichzeitig aus.
-2. Ein Auftrag besitzt eine idempotente `jobId` und einen **Lease/Fencing-Token**; erneute Zustellung darf nicht zu einer zweiten Hardwareausführung führen.
-3. Keine Cloud-Komponente erhält breite Netzsicht auf das LAN: nur das Test-Gateway wird gezielt über Wormhole angesprochen.
-4. Bei Verbindungs- oder Agentenausfall ist das Ergebnis **unbekannt**, nicht automatisch erfolgreich oder blind erneut ausführbar.
-5. GUI-Tests sind nur zulässig, wenn der gewählte Runner eine vorbereitete, geeignete Windows-Sitzung nachweist.
+- [Architecture](docs/architecture.md)
+- [Proof of concept](docs/proof-of-concept.md)
+- [Five-minute team talk](docs/team-talk.md)
+- [Open questions](docs/open-questions.md)
+- [Control Plane Wormhole source check](docs/research/control-plane-wormhole.md)
