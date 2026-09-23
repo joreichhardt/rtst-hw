@@ -14,7 +14,7 @@ Resolve these before production work.
 | What happens on RDP disconnect, lock, desktop switch, and human login? | Windows Workplace + Test Engineering |
 | Which GCP region, projects, VPCs, and shared-VPC/landing-zone controls apply? | Valeo Cloud Platform |
 | Is a Palo Alto VM-Series already the approved GCP inspection appliance, and who owns its HA/policy/logging? | Valeo Network Security |
-| Which Valeo-approved WAN path reaches GCP: SD-WAN/MPLS with HA VPN, or Interconnect? | Valeo Network + Cloud Platform |
+| Which Valeo-approved SD-WAN/MPLS path and HA VPN peer devices terminate the factory-to-GCP connection? | Valeo Network + Cloud Platform |
 | Which on-premises prefixes may be routed to GCP, and which must never be advertised? | Valeo Network Security |
 | Which exact LAN hosts and ports may the cloud reach? | Network Security |
 | Which Wormhole version, topology, and egress rules apply to our tenant? | Platform team |

@@ -12,14 +12,14 @@ The hardware stays on-premises. It is never internet-exposed or registered as a 
 
 | Layer | Purpose | Design |
 |---|---|---|
-| Corporate network | Valeo ↔ GCP transport, administration, routing, and security operations | Valeo-approved SD-WAN/MPLS to GCP; HA VPN (IPsec/BGP) by default, or existing Dedicated/Partner Interconnect. |
+| Corporate network | Valeo ↔ GCP transport, administration, routing, and security operations | Valeo-approved SD-WAN/MPLS carrying HA VPN (IPsec/BGP). The factory has no direct GCP Interconnect. |
 | Test-service path | Restricted traffic from the Control Plane workload to the test service | Wormhole Agent on a local gateway; only the test gateway's approved TCP/UDP endpoint is reachable. |
 
 ### GCP landing-zone path
 
 1. Deploy the platform in a dedicated GCP project/VPC in the Valeo landing zone.
 2. Place a Palo Alto VM-Series appliance in the approved inspection/transit design. The Valeo firewall team owns policy, logging, upgrades, and HA design.
-3. Connect the Valeo WAN edge to GCP using the existing approved SD-WAN/MPLS service and either HA VPN or Interconnect. Cloud Router/BGP handles dynamic routing where used.
+3. Connect the Valeo WAN edge to GCP through HA VPN (IPsec/BGP) over the approved SD-WAN/MPLS path. Cloud Router/BGP handles dynamic routing.
 4. Route only approved on-premises test-network prefixes. Do not advertise broad industrial ranges; never expose the Windows rigs to the internet.
 5. Install the Wormhole Agent on a dedicated local gateway VM, not on the Windows rigs. It maintains the Control Plane connection and exposes only the test gateway.
 6. The gateway relays a reserved job to the local Windows runner. Results return via gateway → Wormhole → cloud API → CI.
@@ -51,7 +51,7 @@ Wormhole documentation does **not** claim Windows GUI automation, RDP control, i
 | Artifact storage | Immutable logs, screenshots, and optional diagnostic bundles. |
 | GCP landing zone | VPC/project boundary for the test platform. |
 | Palo Alto VM-Series | Valeo-managed inspection and policy enforcement point in the GCP design. |
-| Cloud Router + HA VPN / Interconnect | Valeo-approved hybrid network underlay and dynamic routing where used. |
+| Cloud Router + HA VPN | Valeo-approved hybrid network underlay and dynamic routing. |
 | Wormhole Agent | Restricted test-service network transport only. |
 | Test gateway | Local job/result relay; the only Wormhole-exposed LAN service. |
 | GUI runner | Executes the test on Windows: Go/UI Automation or Power Automate Desktop. |
@@ -93,7 +93,7 @@ The scheduler issues a lease and monotonically increasing fencing token. Gateway
 
 ## Security and networking
 
-- Corporate underlay: Valeo-approved SD-WAN/MPLS plus HA VPN or Interconnect; no unmanaged direct tunnel.
+- Corporate underlay: Valeo-approved SD-WAN/MPLS carrying HA VPN; no unmanaged direct tunnel or factory-to-GCP Interconnect.
 - GCP landing zone: VM-Series policy controls and logs approved north-south/east-west paths as decided by Valeo Security.
 - Route only test-network prefixes; no broad industrial LAN route, no direct Windows or RDP access from cloud workloads.
 - Wormhole: cloud workload → gateway only; it complements, not replaces, the corporate hybrid network.
@@ -135,4 +135,4 @@ PAD can replace the Go GUI runner, but not the API, scheduler, reservation model
 - **[MS-1]** Microsoft Learn, [Work with desktop flows using code](https://learn.microsoft.com/en-us/power-automate/developer/desktop-flow-public-apis), accessed 2026-09-23.
 - **[MS-2]** Microsoft Learn, [Run unattended desktop flows](https://learn.microsoft.com/en-us/power-automate/desktop-flows/run-unattended-desktop-flows), accessed 2026-09-23.
 - **[GCP-1]** Google Cloud, [Cloud VPN overview](https://cloud.google.com/network-connectivity/docs/vpn/concepts/overview), accessed 2026-09-23.
-- **[GCP-2]** Google Cloud, [Cloud Interconnect overview](https://cloud.google.com/network-connectivity/docs/interconnect/concepts/overview), accessed 2026-09-23.
+- **[GCP-2]** Google Cloud, [Cloud Interconnect overview](https://cloud.google.com/network-connectivity/docs/interconnect/concepts/overview), accessed 2026-09-23. It remains a reference for why it is not selected here.

@@ -10,7 +10,7 @@ Goal: CI books a rig, runs one test, and gets status, logs, and screenshots.
 
 Show the [architecture diagram](../README.md#architecture).
 
-The platform runs in the GCP landing zone. The Valeo-approved SD-WAN/MPLS path connects the industrial site to GCP through HA VPN or Interconnect; a Palo Alto VM-Series is the landing-zone inspection point. A local gateway is the only test service reached through Wormhole. The Windows rig runs the GUI test. RDP stays for people.
+The platform runs in the GCP landing zone. The Valeo-approved SD-WAN/MPLS path carries HA VPN from the industrial site to GCP; the factory has no direct Interconnect. A Palo Alto VM-Series is the landing-zone inspection point. A local gateway is the only test service reached through Wormhole. The Windows rig runs the GUI test. RDP stays for people.
 
 **Key point:** Corporate WAN provides hybrid connectivity. Wormhole is the restricted test-service path. Neither runs Windows GUI tests.
 

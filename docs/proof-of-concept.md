@@ -12,7 +12,7 @@ Run both candidates on the same real rig:
 ## Setup
 
 - One Control Plane workload with a minimal Test API and scheduler in the GCP landing zone.
-- Valeo-approved GCP/on-premises path: SD-WAN/MPLS plus HA VPN or Interconnect, with the agreed Palo Alto VM-Series policy point.
+- Valeo-approved GCP/on-premises path: SD-WAN/MPLS carrying HA VPN, with the agreed Palo Alto VM-Series policy point. No factory-to-GCP Interconnect.
 - One local gateway behind a Wormhole v2 agent.
 - One Windows rig with the target application and physical hardware.
 - One non-destructive test case with a documented safe state and recovery owner.

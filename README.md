@@ -19,7 +19,7 @@ flowchart TB
     API --> SCH[Scheduler]
     API --> ART[(Jobs and artifacts)]
     API --> CP[Control Plane workload]
-    PA[Palo Alto VM-Series\ninspection] --- VPN[Cloud Router + HA VPN\nor Interconnect]
+    PA[Palo Alto VM-Series\ninspection] --- VPN[Cloud Router + HA VPN]
   end
 
   subgraph Valeo[Valeo on-premises industrial network]
@@ -44,7 +44,7 @@ Editable diagram: [docs/architecture.drawio](docs/architecture.drawio)
 The test platform runs in the **GCP landing zone**. Test hardware remains on-premises in the Valeo industrial network.
 
 - The Valeo-approved **SD-WAN/MPLS** path provides corporate network transport to GCP.
-- Use **HA VPN (IPsec/BGP)** as the normal encrypted GCP connection, or existing **Dedicated/Partner Interconnect** where Valeo provides it.
+- Use **HA VPN (IPsec/BGP)** over the Valeo-approved WAN. The factory has no direct GCP Interconnect.
 - A **Palo Alto VM-Series** in the GCP landing zone is the inspection and policy point, operated to Valeo standards.
 - **Wormhole is a separate, application-level path**: Control Plane reaches only the test gateway, not the whole industrial network.
 - Do not introduce a direct WireGuard tunnel unless Valeo Network Security explicitly approves it; it must not bypass the landing zone or corporate WAN controls.
