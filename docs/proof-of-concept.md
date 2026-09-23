@@ -11,7 +11,8 @@ Run both candidates on the same real rig:
 
 ## Setup
 
-- One Control Plane cloud workload with a minimal Test API and scheduler.
+- One Control Plane workload with a minimal Test API and scheduler in the GCP landing zone.
+- Valeo-approved GCP/on-premises path: SD-WAN/MPLS plus HA VPN or Interconnect, with the agreed Palo Alto VM-Series policy point.
 - One local gateway behind a Wormhole v2 agent.
 - One Windows rig with the target application and physical hardware.
 - One non-destructive test case with a documented safe state and recovery owner.
@@ -22,14 +23,15 @@ Run both candidates on the same real rig:
 
 | Step | Check | Pass condition |
 |---|---|---|
-| Network boundary | Cloud calls the gateway health endpoint. | No access to RDP, Windows hosts, or arbitrary LAN targets. |
+| Hybrid network | Validate approved GCP ↔ Valeo routing and VM-Series policy. | Only agreed test prefixes/routes are present; no broad industrial route or public Windows/RDP access. |
+| Wormhole boundary | Cloud calls the gateway health endpoint. | No access to RDP, Windows hosts, or arbitrary LAN targets. |
 | Rig readiness | Runner reports version, rig ID, and desktop readiness. | Locked or missing desktop is `NOT_READY`. |
 | Track A: Go runner | Run a simple UI Automation flow. | Ten consecutive runs; failures include a reason and screenshot. |
 | Track B: PAD | Start a desktop flow through `RunDesktopFlow`. | `flowsessionId` maps to `jobId`; callback and polling produce the same final status. |
 | PAD session | Run against real hardware in PAD's unattended RDP session. | Application and hardware work there; otherwise exclude PAD for this rig. |
 | Reservation | Submit two jobs for one rig. | Exactly one runs; the other queues or gets a defined capacity response. |
 | CI contract | Create a job and fetch results. | Status, timestamps, logs, and screenshot are available. |
-| Failure handling | Disconnect tunnel, gateway, and runner separately. | No duplicate run. A started job with lost outcome becomes `UNKNOWN`. |
+| Failure handling | Disconnect corporate path, Wormhole, gateway, and runner separately. | No duplicate run. A started job with lost outcome becomes `UNKNOWN`. |
 | RDP and lock | Test disconnect, lock, reconnect, and human login. | Behaviour is recorded; runner fails safely rather than clicking blindly. |
 | Security | Try expired credentials and an unapproved test definition. | Request is rejected before execution. |
 

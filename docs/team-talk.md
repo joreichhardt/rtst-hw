@@ -10,9 +10,9 @@ Goal: CI books a rig, runs one test, and gets status, logs, and screenshots.
 
 Show the [architecture diagram](../README.md#architecture).
 
-The cloud owns the API, scheduler, jobs, and artifacts. A local gateway is the only LAN service reached through Control Plane Wormhole. The Windows rig runs the GUI test. RDP stays for people.
+The platform runs in the GCP landing zone. The Valeo-approved SD-WAN/MPLS path connects the industrial site to GCP through HA VPN or Interconnect; a Palo Alto VM-Series is the landing-zone inspection point. A local gateway is the only test service reached through Wormhole. The Windows rig runs the GUI test. RDP stays for people.
 
-**Key point:** Wormhole provides network transport. It does not run Windows GUI tests.
+**Key point:** Corporate WAN provides hybrid connectivity. Wormhole is the restricted test-service path. Neither runs Windows GUI tests.
 
 ## 1:30–2:20 — Reliability
 
@@ -22,7 +22,7 @@ If a job starts and its outcome is lost, it becomes `UNKNOWN`. Do not automatica
 
 ## 2:20–3:10 — Security
 
-The cloud can reach the gateway only, not RDP or the whole LAN. CI, gateway, and runner use separate identities. Test definitions are allow-listed; this is not a remote shell service.
+GCP gets only approved Valeo test-network routes; the cloud workload reaches only the gateway through Wormhole, not RDP or the whole LAN. CI, gateway, and runner use separate identities. Test definitions are allow-listed; this is not a remote shell service.
 
 Control Plane documents Wormhole for private TCP/UDP connectivity. It does not document Windows desktop automation.
 

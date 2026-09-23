@@ -12,43 +12,44 @@ RDP remains available for setup, diagnosis, and recovery. It is not the CI execu
 
 ```mermaid
 flowchart TB
-  CI[CI pipeline] -->|request test| API[Test API]
+  CI[CI pipeline] --> API[Test API]
 
-  subgraph Cloud[Control Plane Cloud]
+  subgraph GCP[GCP landing zone]
     direction LR
     API --> SCH[Scheduler]
-    API --> DB[(Jobs)]
-    API --> ART[(Artifacts)]
-    API --> CW[Cloud dispatch]
+    API --> ART[(Jobs and artifacts)]
+    API --> CP[Control Plane workload]
+    PA[Palo Alto VM-Series\ninspection] --- VPN[Cloud Router + HA VPN\nor Interconnect]
   end
 
-  subgraph LAN[Local test network]
+  subgraph Valeo[Valeo on-premises industrial network]
     direction LR
-    WH[Wormhole Agent] --> GW[Test gateway]
-    GW --> WIN[Windows rig\nGUI runner]
-    WIN --> HW[Physical hardware]
+    EDGE[Valeo WAN edge\nSD-WAN or MPLS] --- GW[Test gateway]
+    WH[Wormhole Agent] --> GW
+    GW --> WIN[Windows rig\nGUI runner] --> HW[Physical hardware]
     RDP[RDP for people] -. manual only .-> WIN
   end
 
-  CW -. TCP/UDP through Wormhole .-> WH
+  VPN == Valeo-approved private connection ==> EDGE
+  CP -. restricted app path through Wormhole .-> WH
   WIN -. logs and screenshots .-> GW
   GW -. status and artifacts .-> API
-  API -->|result URLs| CI
+  API --> CI
 ```
 
 Editable diagram: [docs/architecture.drawio](docs/architecture.drawio)
 
-## How on-prem hardware joins the hybrid cloud
+## Hybrid model
 
-The hardware is **not moved into the cloud**. It stays connected to its Windows rig in the local test network.
+The test platform runs in the **GCP landing zone**. Test hardware remains on-premises in the Valeo industrial network.
 
-1. Run the Control Plane Wormhole Agent on a local gateway VM that can reach the test gateway.
-2. The Wormhole Agent opens and maintains the secure connection to Control Plane.
-3. The cloud workload reaches only the gateway's approved TCP/UDP endpoint through that connection.
-4. The gateway relays the reserved job to the Windows GUI runner on the local rig.
-5. The runner drives the local GUI and hardware, then sends logs and screenshots back through the gateway.
+- The Valeo-approved **SD-WAN/MPLS** path provides corporate network transport to GCP.
+- Use **HA VPN (IPsec/BGP)** as the normal encrypted GCP connection, or existing **Dedicated/Partner Interconnect** where Valeo provides it.
+- A **Palo Alto VM-Series** in the GCP landing zone is the inspection and policy point, operated to Valeo standards.
+- **Wormhole is a separate, application-level path**: Control Plane reaches only the test gateway, not the whole industrial network.
+- Do not introduce a direct WireGuard tunnel unless Valeo Network Security explicitly approves it; it must not bypass the landing zone or corporate WAN controls.
 
-This makes the test service hybrid: **cloud control plane, on-premises test execution and hardware**.
+This is a hybrid service: cloud control and scheduling, on-premises GUI execution and hardware.
 
 ## Keep these roles separate
 
