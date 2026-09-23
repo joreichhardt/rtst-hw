@@ -72,6 +72,6 @@ This is a hybrid service: cloud control and scheduling, on-premises GUI executio
 
 - [Architecture](docs/architecture.md)
 - [Proof of concept](docs/proof-of-concept.md)
-- [Five-minute team talk](docs/team-talk.md)
+- [Linux and API-driven alternatives](docs/linux-api-alternatives.md)
 - [Open questions](docs/open-questions.md)
 - [Control Plane Wormhole source check](docs/research/control-plane-wormhole.md)
