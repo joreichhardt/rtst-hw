@@ -57,6 +57,22 @@ Wormhole documentation does **not** claim Windows GUI automation, RDP control, i
 | GUI runner | Executes the test on Windows: Go/UI Automation or Power Automate Desktop. |
 | RDP | Human setup, diagnosis, and recovery only. |
 
+## Windows authentication and identities
+
+Use **three separate identities**. Do not use one shared Windows account for everything.
+
+| Identity | Use | Rules |
+|---|---|---|
+| `gMSA` | Windows service for agent health, device identity, updates, and gateway communication | Non-interactive only. gMSA is suitable for services and scheduled tasks; Windows manages its password. [MS-3] |
+| Dedicated automation user | Interactive Windows desktop for the Go GUI runner, one account per rig or isolated rig group | Least privilege; no local administrator, no human use, no broad network access. Keep its password in enterprise PAM/secret management and rotate it. |
+| Human support user | RDP setup, diagnosis, and recovery | Separate named account with MFA and audit. Do not access the rig during an active job. |
+
+The Go runner service runs as the gMSA. Its interactive worker runs in the automation user's desktop session. The runner authenticates to the gateway with a separate device certificate/mTLS identity; it never sends the Windows password to the cloud.
+
+A gMSA is **not** the GUI desktop account: it is designed for service workloads and does not provide a practical password-based interactive session. If an automated console logon is required, treat it as a security exception. Microsoft Autologon stores the password as an LSA secret that a local administrator can retrieve, so use it only on an isolated rig with explicit Enterprise Security approval. [MS-4]
+
+For PAD, use a separate desktop-flow connection credential for the automation user. PAD creates and releases its own RDP session; it does not use the console session. [MS-2]
+
 ## Job lifecycle
 
 ```mermaid
@@ -136,3 +152,5 @@ PAD can replace the Go GUI runner, but not the API, scheduler, reservation model
 - **[MS-2]** Microsoft Learn, [Run unattended desktop flows](https://learn.microsoft.com/en-us/power-automate/desktop-flows/run-unattended-desktop-flows), accessed 2026-09-23.
 - **[GCP-1]** Google Cloud, [Cloud VPN overview](https://cloud.google.com/network-connectivity/docs/vpn/concepts/overview), accessed 2026-09-23.
 - **[GCP-2]** Google Cloud, [Cloud Interconnect overview](https://cloud.google.com/network-connectivity/docs/interconnect/concepts/overview), accessed 2026-09-23. It remains a reference for why it is not selected here.
+- **[MS-3]** Microsoft Learn, [Group Managed Service Accounts overview](https://learn.microsoft.com/en-us/windows-server/security/group-managed-service-accounts/group-managed-service-accounts-overview), accessed 2026-09-23.
+- **[MS-4]** Microsoft Learn, [Sysinternals Autologon](https://learn.microsoft.com/en-us/sysinternals/downloads/autologon), accessed 2026-09-23.

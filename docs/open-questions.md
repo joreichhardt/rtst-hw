@@ -10,6 +10,9 @@ Resolve these before production work.
 | Which Windows version, application version, drivers, and firmware are in scope? | Rig owner |
 | Which runner applies to the rig: Go/UI Automation or PAD? | Platform + Test Engineering |
 | Can the test run in a managed interactive desktop (Go)? | Windows Workplace + Security |
+| Which gMSA runs the agent service, and which rig hosts may retrieve its managed password? | Enterprise Identity + Windows Workplace |
+| Which dedicated automation user owns each GUI desktop, and what local/hardware rights does it need? | Enterprise Identity + rig owner |
+| Is automated console logon acceptable, or must the Go runner use a pre-established session? | Enterprise Security + Windows Workplace |
 | Can the real test run in PAD's unattended RDP session rather than the console? | Test Engineering + rig owner |
 | What happens on RDP disconnect, lock, desktop switch, and human login? | Windows Workplace + Test Engineering |
 | Which GCP region, projects, VPCs, and shared-VPC/landing-zone controls apply? | Enterprise Cloud Platform |
@@ -23,6 +26,7 @@ Resolve these before production work.
 ## Must answer before production
 
 - CI identity, gateway/runner mTLS rotation, and emergency credential revocation.
+- Automation-user password storage/rotation in enterprise PAM, gMSA host allow-list, and the process for a locked or expired GUI account.
 - API contract: callbacks or polling, errors, cancellation, idempotency, and artifacts.
 - Queue, lease, preflight, execution, upload, and recovery timeouts.
 - Retry rules per test type, especially after `UNKNOWN`.

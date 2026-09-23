@@ -16,7 +16,7 @@ Run both candidates on the same real rig:
 - One local gateway behind a Wormhole v2 agent.
 - One Windows rig with the target application and physical hardware.
 - One non-destructive test case with a documented safe state and recovery owner.
-- A dedicated Windows test account.
+- A gMSA for the background agent service, a separate low-privilege GUI automation user, and separate named RDP support users.
 - One CI job.
 
 ## Acceptance criteria
@@ -33,6 +33,7 @@ Run both candidates on the same real rig:
 | CI contract | Create a job and fetch results. | Status, timestamps, logs, and screenshot are available. |
 | Failure handling | Disconnect corporate path, Wormhole, gateway, and runner separately. | No duplicate run. A started job with lost outcome becomes `UNKNOWN`. |
 | RDP and lock | Test disconnect, lock, reconnect, and human login. | Behaviour is recorded; runner fails safely rather than clicking blindly. |
+| Windows identities | Run agent service as gMSA; run GUI worker as automation user; attempt RDP with a support account during a job. | Identities stay separate; automation user has no local admin; RDP is blocked/audited during the job. |
 | Security | Try expired credentials and an unapproved test definition. | Request is rejected before execution. |
 
 ## Required evidence
